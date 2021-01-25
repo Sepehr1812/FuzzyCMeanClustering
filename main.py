@@ -5,6 +5,8 @@ from random import uniform
 from re import split
 from sys import float_info
 
+import matplotlib.pyplot as plt
+
 
 def read_data_set():
     """
@@ -139,6 +141,16 @@ def calculate_cost(data: list, u: list, v: list, m: int):
     return s
 
 
+def plot(data: list, v: list):
+    """
+    plotting data and cluster centers
+    """
+    plt.scatter([x[0] for x in data], [x[1] for x in data], label="data", color="blue", marker="o", s=10)
+    plt.scatter([x[0] for x in v], [x[1] for x in v], label="cluster centers", color="red", marker="*", s=40)
+
+    plt.show()
+
+
 def main():
     t = 100  # termination condition; number of loops in FCM
     m = 5  # m in u_ik formula
@@ -156,8 +168,8 @@ def main():
 
         v_arr.append(v)
         u_arr.append(u)
+
         entropy = calculate_entropy(u)
-        print(entropy)
         if entropy < min_entropy:
             min_entropy = entropy
             min_index = c - 2
@@ -165,6 +177,10 @@ def main():
     print("proper c:", min_index + 2)
     print("clusters centers:", v_arr[min_index])
     print("cost:", calculate_cost(data, u_arr[min_index], v_arr[min_index], m))
+
+    # plotting for 2D data
+    if len(data[0]) == 2:
+        plot(data, v_arr[min_index])
 
 
 if __name__ == '__main__':
