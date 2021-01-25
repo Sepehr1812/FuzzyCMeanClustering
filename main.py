@@ -1,8 +1,9 @@
 """ clustering via FCM (Fuzzy-C-Mean) algorithm """
 
-import re
-from math import pow, sqrt
+from math import pow, sqrt, log, e
 from random import uniform
+from re import split
+from sys import float_info
 
 
 def read_data_set():
@@ -11,25 +12,34 @@ def read_data_set():
     """
     coordinates = []
     with open("data_set.csv", "r") as f:
-        data = [re.split(",", line.rstrip('\n')) for line in f]
+        data = [split(",", line.rstrip('\n')) for line in f]
+
+        for i in range(len(data)):
+            data[i] = [float(x) for x in data[i]]
+
         for d in data:
-            coordinates.append((round(float(d[0]), 9), round(float(d[1]), 9)))
+            coordinates.append(tuple(d))
 
     return coordinates
 
 
-def initialize_v(c: int):
+def initialize_v(c: int, d: int):
     """
     initializes v array (array of the coordinates of cluster centers)
     :param c: number of clusters
+    :param d: dimension of space
     :return: v array
     """
-    v = []
+    v_arr = []
 
-    for i in range(c):
-        v.append((uniform(0, 1), uniform(0, 1)))
+    for _ in range(c):
+        v = []
+        for j in range(d):
+            v.append(uniform(0, 1))
 
-    return v
+        v_arr.append(tuple(v))
+
+    return v_arr
 
 
 def calculate_distance(a, b):
@@ -48,7 +58,7 @@ def check_convergence(old_v: list, new_v: list):
     :return: True if we reach convergence, False otherwise
     """
     for i in range(len(old_v)):
-        if calculate_distance(old_v[i], new_v[i]) > 0.001:
+        if calculate_distance(old_v[i], new_v[i]) > 0.001:  # 0.001 is a good number for checking convergence
             return False
     return True
 
@@ -98,11 +108,23 @@ def fcm(data: list, v: list, m: int, t: int):
             new_v.append(tuple(sum_elements))
 
         # checking convergence
-        print(new_v)
+        # print(new_v)
         if check_convergence(old_v, new_v):
             return new_v, u
 
     return new_v, u
+
+
+def calculate_entropy(u: list[list[float]]):
+    """
+    :return: entropy of data based on clusters
+    """
+    s = 0
+    for i in range(len(u)):
+        for k in range(len(u[i])):
+            s += u[i][k] * log(u[i][k], e)
+
+    return -s / log(len(u), e)
 
 
 def main():
@@ -112,9 +134,22 @@ def main():
     data = read_data_set()  # data coordinates
 
     # trying different cluster numbers between 2 and 10
-    for c in range(5, 6):
-        v = initialize_v(c)
-        fcm(data, v, m, t)
+    min_entropy = float_info.max
+    min_index = 0
+    v_arr = []
+    for c in range(2, 11):
+        v = initialize_v(c, len(data[0]))
+        v, u = fcm(data, v, m, t)
+
+        v_arr.append(v)
+        entropy = calculate_entropy(u)
+        print(entropy)
+        if entropy < min_entropy:
+            min_entropy = entropy
+            min_index = c - 2
+
+    print("proper c:", min_index + 2)
+    print("clusters centers:", v_arr[min_index])
 
 
 if __name__ == '__main__':
