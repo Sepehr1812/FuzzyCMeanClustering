@@ -33,6 +33,9 @@ def initialize_v(c: int):
 
 
 def calculate_distance(a, b):
+    """
+    :return: distance of a and b in their vector space
+    """
     _sum = 0
     for i in range(len(a)):
         _sum += pow(a[i] - b[i], 2)
@@ -40,19 +43,38 @@ def calculate_distance(a, b):
     return sqrt(_sum)
 
 
-def fcm(data: list, v: list, m: int):
-    u = [[0] * len(data)] * len(v)
+def check_convergence(old_v: list, new_v: list):
+    """
+    :return: True if we reach convergence, False otherwise
+    """
+    for i in range(len(old_v)):
+        if calculate_distance(old_v[i], new_v[i]) > 0.001:
+            return False
+    return True
+
+
+def fcm(data: list, v: list, m: int, t: int):
+    """
+    performing FCM algorithm
+    :param data: all data coordinates
+    :param v: initial cluster centers array
+    :param m: param m that is used in formulas
+    :param t: number of loops (termination condition)
+    :return: array of cluster centers and u_ik if it reached to a convergence
+    """
+    u = [[0 for _ in range(len(data))] for _ in range(len(v))]
     new_v = v
 
-    while True:
+    for _ in range(t):
         old_v = new_v
+
         # calculating u_ik
-        for i in range(len(new_v)):
+        for i in range(len(v)):
             for k in range(len(data)):
                 denominator = 0
 
                 x_k_minus_v_i = calculate_distance(data[k], new_v[i])
-                for j in range(len(new_v)):
+                for j in range(len(v)):
                     denominator += pow(x_k_minus_v_i / calculate_distance(data[k], new_v[j]), 2 / (m - 1))
 
                 u[i][k] = 1 / denominator
@@ -60,15 +82,15 @@ def fcm(data: list, v: list, m: int):
         # calculating V_i
         new_v = []
         for i in range(len(v)):
-            sum_elements = [0] * len(v[0])
+            sum_elements = [0] * len(v[0])  # tuple of the numerator
             for k in range(len(data)):
                 p = pow(u[i][k], m)
                 for j in range(len(v[0])):
                     sum_elements[j] += p * data[k][j]
 
             den = 0
-            for x in data[i]:
-                den += pow(x, m)
+            for _u in u[i]:
+                den += pow(_u, m)
 
             for j in range(len(sum_elements)):
                 sum_elements[j] /= den
@@ -77,17 +99,22 @@ def fcm(data: list, v: list, m: int):
 
         # checking convergence
         print(new_v)
+        if check_convergence(old_v, new_v):
+            return new_v, u
+
+    return new_v, u
 
 
 def main():
-    m = 4  # m in u_ik formula
+    t = 100  # termination condition; number of loops in FCM
+    m = 3  # m in u_ik formula
 
     data = read_data_set()  # data coordinates
 
     # trying different cluster numbers between 2 and 10
-    for c in range(2, 3):
+    for c in range(5, 6):
         v = initialize_v(c)
-        fcm(data, v, m)
+        fcm(data, v, m, t)
 
 
 if __name__ == '__main__':
