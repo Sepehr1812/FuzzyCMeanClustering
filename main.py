@@ -1,6 +1,7 @@
 """ clustering via FCM algorithm """
 
 import re
+from random import uniform
 
 
 def read_data_set():
@@ -16,8 +17,26 @@ def read_data_set():
     return coordinates
 
 
+def initialize_v(c: int):
+    """
+    initializes v array (array of the coordinates of cluster centers)
+    :param c: number of clusters
+    :return: v array
+    """
+    v = []
+
+    for i in range(c):
+        v.append((uniform(0, 1), uniform(0, 1)))
+
+    return v
+
+
 def main():
     coordinates = read_data_set()  # data coordinates
+
+    # trying different cluster numbers between 2 and 10
+    for c in range(2, 11):
+        v = initialize_v(c)
 
 
 if __name__ == '__main__':
