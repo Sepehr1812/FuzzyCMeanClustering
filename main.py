@@ -127,9 +127,21 @@ def calculate_entropy(u: list[list[float]]):
     return -s / log(len(u), e)
 
 
+def calculate_cost(data: list, u: list, v: list, m: int):
+    """
+    :return: cost of algorithm
+    """
+    s = 0
+    for j in range(len(data)):
+        for i in range(len(v)):
+            s += pow(u[i][j], m) * pow(calculate_distance(data[j], v[i]), 2)
+
+    return s
+
+
 def main():
     t = 100  # termination condition; number of loops in FCM
-    m = 3  # m in u_ik formula
+    m = 5  # m in u_ik formula
 
     data = read_data_set()  # data coordinates
 
@@ -137,11 +149,13 @@ def main():
     min_entropy = float_info.max
     min_index = 0
     v_arr = []
+    u_arr = []
     for c in range(2, 11):
         v = initialize_v(c, len(data[0]))
         v, u = fcm(data, v, m, t)
 
         v_arr.append(v)
+        u_arr.append(u)
         entropy = calculate_entropy(u)
         print(entropy)
         if entropy < min_entropy:
@@ -150,6 +164,7 @@ def main():
 
     print("proper c:", min_index + 2)
     print("clusters centers:", v_arr[min_index])
+    print("cost:", calculate_cost(data, u_arr[min_index], v_arr[min_index], m))
 
 
 if __name__ == '__main__':
